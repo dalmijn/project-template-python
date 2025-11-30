@@ -1,0 +1,73 @@
+---
+name: Build Documentation
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - < main-branch >
+    tags:
+      - v*
+    paths:
+      - docs/**/*
+      - examples/*
+      - pyproject.toml
+      - .github/workflows/ci_docs.yml
+  pull_request:
+    branches:
+      - < main-branch >
+    paths:
+      - docs/**/*
+      - examples/*
+      - pyproject.toml
+      - .github/workflows/ci_docs.yml
+
+jobs:
+  docs:
+    defaults:
+      run:
+        shell: bash -e -l {0}
+    env:
+      branch_name: ${{ github.head_ref || github.ref_name }}
+    timeout-minutes: 30
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - "ubuntu-latest"
+        include:
+          - os: ubuntu-latest
+            label: linux-64
+
+    name: ${{ matrix.label }}
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup pixi env
+        uses: prefix-dev/setup-pixi@28eb668aafebd9dede9d97c4ba1cd9989a4d0004
+        with:
+          pixi-version: "v0.58.0"
+          environments: docs
+          locked: false
+          cache: true
+          cache-write: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
+
+      - name: Generate docs
+        if: ${{ !github.event.act }}
+        run: |
+          pixi run -e docs docs-html
+          echo "DOC_VERSION=$(pixi run --locked -e docs python -c 'from my_lib import __version__ as v; print("dev" if "dev" in v else "v"+v.replace(".dev",""))')" >> $GITHUB_ENV
+
+      - name: Upload to GitHub Pages
+        if: ${{ !github.event.act }}
+        uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs/_build/html
+          exclude_assets: .buildinfo,_sources/*,_examples/*.ipynb
+          destination_dir: ./${{ env.DOC_VERSION }}
+          keep_files: false
+          full_commit_message: Deploy ${{ env.DOC_VERSION }} to GitHub Pages
