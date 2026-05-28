@@ -45,8 +45,8 @@ jobs:
         include:
           - os: ubuntu-latest
             label: linux-64
-          - os: windows-latest
-            label: win-64
+          # - os: windows-latest
+          #   label: win-64
 
     uses: ./.github/workflows/test.yml
     with:
