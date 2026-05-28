@@ -1,2 +1,2 @@
 # Python project templating
-Simply download an drag to the correct directory.
+Simply download and drag to the correct directory.
