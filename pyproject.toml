@@ -57,6 +57,7 @@ classifiers = [
 'Programming Language :: Python :: 3.11',
 'Programming Language :: Python :: 3.12',
 'Programming Language :: Python :: 3.13',
+'Programming Language :: Python :: 3.14',
 ]
 
 [project.optional-dependencies] # Optional
@@ -73,12 +74,10 @@ docs = [
 	"pydata-sphinx-theme",
     "sphinx>=8.2.0",
     "sphinx_design",
-    "sphinx_autosummary_accessors",
 ]
 examples = [
     "cartopy",
     "jupyterlab",
-    "matplotlib",
     "nbconvert==7.13.1",
     "notebook",
     "pandoc",
@@ -196,13 +195,12 @@ docker-clean = { cmd = ["docker", "system", "prune", "-f"] }
 # Dev specific taskss
 [tool.pixi.feature.dev.tasks]
 # Installation
-install-mypy = { cmd = ["mypy", ".", "--install-types", "--non-interactive"] }
 install-pre-commit = "pre-commit install"
-install = { depends-on = ["install-mypy", "install-pre-commit"] }
+install = { depends-on = ["install-pre-commit"] }
 
 # Linting and code checking
 lint = { cmd = ["pre-commit", "run", "--all"] }
-mypy = { cmd = ["mypy", "."] }
+mypy = { cmd = ["mypy", ".", "--install-types", "--non-interactive"] }
 
 # SBOM
 sbom = { cmd = [
@@ -270,7 +268,14 @@ my_lib = { path = ".", editable = true }
 [tool.pixi.feature.examples.dependencies]
 pandoc = "*"
 
+[tool.pixi.feature.wheel.dependencies]
+pip = "*"
+uv = "*"
+
 # Extra python environments
+[tool.pixi.feature.py314.dependencies]
+python = "3.14.*"
+
 [tool.pixi.feature.py313.dependencies]
 python = "3.13.*"
 
@@ -282,9 +287,11 @@ python = "3.11.*"
 
 ## Define the environments
 [tool.pixi.environments]
-default = { features = ["py313", "dev", "docs", "examples", "test"] }
-docs = { features = ["docs", "examples"] }
+default = { features = ["py314", "dev", "docs", "examples", "test"] }
+docs = { features = ["py313", "docs", "examples"] }
 slim = { features = [] }
-test-py313 = {features = ["py313", "test"]}
-test-py312 = {features = ["py312", "test"]}
-test-py311 = {features = ["py311", "test"]}
+test-py314 = { features = ["py314", "test"] }
+test-py313 = { features = ["py313", "test"] }
+test-py312 = { features = ["py312", "test"] }
+test-py311 = { features = ["py311", "test"] }
+wheel = { features = ["py313", "test", "wheel"], no-default-feature=true }
